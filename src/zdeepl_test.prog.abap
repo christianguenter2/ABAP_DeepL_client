@@ -5,6 +5,13 @@
 *&---------------------------------------------------------------------*
 REPORT zdeepl_test.
 
+PARAMETERS:
+  usage   TYPE abap_bool RADIOBUTTON GROUP r1 DEFAULT 'X',
+  transl  TYPE abap_bool RADIOBUTTON GROUP r1,
+  text    TYPE string LOWER CASE,
+  target  TYPE char2,
+  api_key TYPE string LOWER CASE OBLIGATORY.
+
 CLASS deepl_controller DEFINITION.
 
   PUBLIC SECTION.
@@ -19,38 +26,33 @@ CLASS deepl_controller IMPLEMENTATION.
 
   METHOD run.
 
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = 'https://api.deepl.com/v2/usage?auth_key=512d5953-94ca-d3ef-d8c1-4ea0b08c065b'
-      IMPORTING
-        client             = DATA(li_http_client)
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
+    DATA: lv_status  TYPE i,
+          lt_headers TYPE tihttpnvp,
+          lv_data    TYPE string.
 
-    IF sy-subrc <> 0.
-      zcx_deepl_exception=>raise_t100( ).
-    ENDIF.
+    DATA(lo_deepl) = NEW zcl_deepl_api( api_key ).
 
-    TRY.
-        DATA(li_rest) = CAST if_rest_client( NEW cl_rest_http_client( li_http_client ) ).
+    CASE abap_true.
+      WHEN usage.
 
-        li_rest->set_request_header(
-            iv_name  = 'auth_key'
-            iv_value = '512d5953-94ca-d3ef-d8c1-4ea0b08c065b' ).
+        lo_deepl->usage(
+                    IMPORTING
+                      ev_status      = lv_status
+                      et_headers     = lt_headers
+                      ev_data        = lv_data ).
 
-        li_rest->get( ).
+      WHEN transl.
 
-        DATA(lv_status) = li_rest->get_status( ).
-        DATA(lt_headers) = li_rest->get_response_headers( ).
-        DATA(lv_data) = li_rest->get_response_entity( )->get_string_data( ).
+        lo_deepl->translate(
+                    EXPORTING
+                      iv_text        = text
+                      iv_target_lang = target
+                    IMPORTING
+                      ev_status      = lv_status
+                      et_headers     = lt_headers
+                      ev_data        = lv_data ).
 
-
-      CATCH cx_rest_client_exception INTO DATA(lx_error).
-        zcx_deepl_exception=>raise( lx_error ).
-    ENDTRY.
+    ENDCASE.
 
     cl_demo_output=>write( lv_status ).
     cl_demo_output=>write( lt_headers ).
