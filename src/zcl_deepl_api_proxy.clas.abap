@@ -1,4 +1,4 @@
-CLASS zcl_deepl_api DEFINITION
+CLASS zcl_deepl_api_proxy DEFINITION
   PUBLIC
   CREATE PUBLIC .
 
@@ -55,7 +55,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_deepl_api IMPLEMENTATION.
+CLASS zcl_deepl_api_proxy IMPLEMENTATION.
 
   METHOD build_url.
 

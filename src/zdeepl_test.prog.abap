@@ -30,7 +30,7 @@ CLASS deepl_controller IMPLEMENTATION.
           lt_headers TYPE tihttpnvp,
           lv_data    TYPE string.
 
-    DATA(lo_deepl) = NEW zcl_deepl_api( api_key ).
+    DATA(lo_deepl) = NEW zcl_deepl_api_proxy( api_key ).
 
     CASE abap_true.
       WHEN usage.
