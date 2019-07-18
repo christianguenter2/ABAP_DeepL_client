@@ -21,7 +21,7 @@ CLASS deepl_controller IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url                = 'https://api.deepl.com/v2/translate'
+        url                = 'https://api.deepl.com/v2/usage?auth_key=512d5953-94ca-d3ef-d8c1-4ea0b08c065b'
       IMPORTING
         client             = DATA(li_http_client)
       EXCEPTIONS
@@ -37,21 +37,9 @@ CLASS deepl_controller IMPLEMENTATION.
     TRY.
         DATA(li_rest) = CAST if_rest_client( NEW cl_rest_http_client( li_http_client ) ).
 
-*        li_rest->create_request_entity( )->set_header_field(
-*            iv_name  = 'auth_key'
-*            iv_value = |512d5953-94ca-d3ef-d8c1-4ea0b08c065b| ).
-
         li_rest->set_request_header(
             iv_name  = 'auth_key'
             iv_value = '512d5953-94ca-d3ef-d8c1-4ea0b08c065b' ).
-
-        li_rest->set_request_header(
-            iv_name  = 'text'
-            iv_value = 'this is a test' ).
-
-        li_rest->set_request_header(
-            iv_name  = 'target_lang'
-            iv_value = 'DE' ).
 
         li_rest->get( ).
 
@@ -68,7 +56,6 @@ CLASS deepl_controller IMPLEMENTATION.
     cl_demo_output=>write( lt_headers ).
     cl_demo_output=>write( lv_data ).
     cl_demo_output=>display( ).
-
 
   ENDMETHOD.
 
