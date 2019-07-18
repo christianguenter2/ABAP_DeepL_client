@@ -9,7 +9,7 @@ PARAMETERS:
   usage   TYPE abap_bool RADIOBUTTON GROUP r1 DEFAULT 'X',
   transl  TYPE abap_bool RADIOBUTTON GROUP r1,
   text    TYPE string LOWER CASE,
-  target  TYPE char2,
+  target  TYPE zif_deepl_definitions=>ty_lang,
   api_key TYPE string LOWER CASE OBLIGATORY.
 
 CLASS deepl_controller DEFINITION.
@@ -46,7 +46,7 @@ CLASS deepl_controller IMPLEMENTATION.
         lo_deepl->translate(
                     EXPORTING
                       iv_text        = text
-                      iv_target_lang = target
+                      iv_target_lang = CONV #( target )
                     IMPORTING
                       ev_status      = lv_status
                       et_headers     = lt_headers

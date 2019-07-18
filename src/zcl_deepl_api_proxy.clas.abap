@@ -3,7 +3,6 @@ CLASS zcl_deepl_api_proxy DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     METHODS:
       constructor
         IMPORTING
@@ -20,7 +19,7 @@ CLASS zcl_deepl_api_proxy DEFINITION
       translate
         IMPORTING
           iv_text        TYPE string
-          iv_target_lang TYPE char2
+          iv_target_lang TYPE zif_deepl_definitions=>lang
         EXPORTING
           ev_status      TYPE i
           et_headers     TYPE tihttpnvp
