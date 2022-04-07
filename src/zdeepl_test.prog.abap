@@ -26,9 +26,10 @@ CLASS deepl_controller IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lv_status  TYPE i,
-          lt_headers TYPE tihttpnvp,
-          lv_data    TYPE string.
+    DATA: lv_status       TYPE i,
+          lt_headers      TYPE tihttpnvp,
+          lv_data         TYPE string,
+          lv_deserialized TYPE zdeepl_translate.
 
     DATA(lo_deepl) = NEW zcl_deepl_api_proxy( api_key ).
 
@@ -54,9 +55,17 @@ CLASS deepl_controller IMPLEMENTATION.
 
     ENDCASE.
 
+    /ui2/cl_json=>deserialize(
+      EXPORTING
+        json          = lv_data
+        pretty_name   = abap_true
+      CHANGING
+        data          = lv_deserialized ).
+
     cl_demo_output=>write( lv_status ).
     cl_demo_output=>write( lt_headers ).
     cl_demo_output=>write( lv_data ).
+    cl_demo_output=>write( lv_deserialized-translations ).
     cl_demo_output=>display( ).
 
   ENDMETHOD.

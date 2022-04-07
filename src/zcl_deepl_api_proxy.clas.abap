@@ -28,6 +28,7 @@ CLASS zcl_deepl_api_proxy DEFINITION
           zcx_deepl_exception.
 
   PRIVATE SECTION.
+    CONSTANTS: deepl_destination TYPE rfcdest VALUE 'DEEPL'.
     DATA:
       mv_api_key TYPE string.
 
@@ -43,7 +44,7 @@ CLASS zcl_deepl_api_proxy DEFINITION
         RAISING
           zcx_deepl_exception,
 
-      build_url
+      build_path
         IMPORTING
           iv_verb       TYPE string
           iv_params     TYPE string
@@ -56,12 +57,9 @@ ENDCLASS.
 
 CLASS zcl_deepl_api_proxy IMPLEMENTATION.
 
-  METHOD build_url.
+  METHOD build_path.
 
-    CONSTANTS: co_base_url TYPE string VALUE `https://api.deepl.com/v2/`.
-
-    rv_url = |{ co_base_url }|
-          && |{ iv_verb }|
+    rv_url = |{ iv_verb }|
           && |?auth_key={ mv_api_key }|
           && COND #(
                WHEN iv_params IS NOT INITIAL
@@ -79,31 +77,54 @@ CLASS zcl_deepl_api_proxy IMPLEMENTATION.
 
   METHOD execute.
 
+    CONSTANTS: co_base_url          TYPE string VALUE `https://api-free.deepl.com/v2/`.
+
     CLEAR:
       ev_status,
       et_headers,
       ev_data.
 
-    DATA(lv_url) = build_url(
+    DATA(lv_path) = build_path(
                        iv_verb   = iv_verb
                        iv_params = iv_params ).
 
-    cl_http_client=>create_by_url(
+    cl_http_client=>create_by_destination(
       EXPORTING
-        url                = lv_url
+        destination              = deepl_destination
       IMPORTING
-        client             = DATA(li_http_client)
+        client                   = DATA(li_http_client)
       EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-
-    IF sy-subrc <> 0.
+        argument_not_found       = 1
+        destination_not_found    = 2
+        destination_no_authority = 3
+        plugin_not_active        = 4
+        internal_error           = 5
+        OTHERS                   = 6
+    ).
+    IF sy-subrc = 2.
+      " Fallback to create_by_url
+      cl_http_client=>create_by_url(
+        EXPORTING
+          url                = lv_path
+        IMPORTING
+          client             = li_http_client
+        EXCEPTIONS
+          argument_not_found = 1
+          plugin_not_active  = 2
+          internal_error     = 3
+          OTHERS             = 4 ).
+      IF sy-subrc <> 0.
+        zcx_deepl_exception=>raise_t100( ).
+      ENDIF.
+    ELSEIF sy-subrc <> 0.
       zcx_deepl_exception=>raise_t100( ).
     ENDIF.
 
     TRY.
+        li_http_client->request->set_header_field(
+            name  = if_http_header_fields_sap=>request_uri
+            value = lv_path ).
+
         DATA(li_rest) = CAST if_rest_client( NEW cl_rest_http_client( li_http_client ) ).
 
         li_rest->get( ).
